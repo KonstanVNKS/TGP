@@ -5,6 +5,7 @@ import tgpr.framework.mvc.Params;
 
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.sql.ResultSet;
 import java.time.LocalDate;
@@ -173,6 +174,7 @@ public class Member extends Model{
 
     public boolean delete() {
         execute("delete from follows where follower=:pseudo or followee=:pseudo", new Params("pseudo", pseudo));
+        execute("delete from messages where author=:pseudo or recipient=:pseudo", new Params("pseudo", pseudo));
         int c = execute("delete from members where pseudo=:pseudo", new Params("pseudo", pseudo));
         return c == 1;
     }
@@ -262,5 +264,31 @@ public class Member extends Model{
             default -> follow(otherMember);
         }
     }
+
+    public List<Message> getMessagesSent() {
+        return queryList(Message.class,
+                "select * from messages where author=:pseudo order by date_time desc",
+                new Params("pseudo", pseudo));
+    }
+
+    public List<Message> getMessagesReceived() {
+        return queryList(Message.class,
+                "select * from messages where recipient=:pseudo order by date_time desc",
+                new Params("pseudo", pseudo));
+    }
+
+    public List<Message> getVisibleMessagesReceived(Member current) {
+        boolean showPrivate = current.isAdmin() || current.equals(this);
+        return queryList(Message.class,
+                "select * from messages where recipient=:recipient and (not private or :showPrivate or author=:author) order by date_time desc",
+                new Params("author", current.pseudo)
+                        .add("showPrivate", showPrivate)
+                        .add("recipient", pseudo));
+    }
+
+    public Message send(Member to, String body, boolean isPrivate) {
+        return new Message(-1, pseudo, to.pseudo, body, isPrivate, LocalDateTime.now()).save();
+    }
+
 
 }
