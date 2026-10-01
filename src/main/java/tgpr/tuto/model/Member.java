@@ -1,5 +1,6 @@
 package tgpr.tuto.model;
 
+import org.springframework.util.Assert;
 import tgpr.framework.mvc.Model;
 import tgpr.framework.mvc.Params;
 
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 import static tgpr.framework.util.Tools.hash;
 
 
-public class Member extends Model{
+public abstract class Member extends Model{
     public enum Fields {
         Pseudo, Password, Profile, Admin, BirthDate
     }
@@ -57,18 +58,23 @@ public class Member extends Model{
     public Member(){
     }
 
-    public Member(String pseudo, String password, boolean admin) {
+    public Member(String pseudo, String password) {
         this.pseudo = pseudo;
         this.password = password;
-        this.admin = admin;
     }
 
-    public Member(String pseudo, String password, String profile, LocalDate birthdate, boolean admin) {
+    public Member(String pseudo, String password, String profile, LocalDate birthdate) {
         this.pseudo = pseudo;
         this.password = password;
         this.profile = profile;
         this.birthdate = birthdate;
-        this.admin = admin;
+    }
+
+    public static Member createMember(String pseudo, String password, String profile, LocalDate birthdate, boolean isAdmin) {
+        if (isAdmin)
+            return new Administrator(pseudo, password, profile, birthdate);
+        else
+            return new RegularMember(pseudo, password, profile, birthdate);
     }
 
     public String getPsuedo() {
@@ -112,11 +118,7 @@ public class Member extends Model{
     }
 
     public boolean isAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
+        return this instanceof Administrator;
     }
 
     @Override
@@ -125,7 +127,7 @@ public class Member extends Model{
                 "pseudo='" + pseudo + '\'' +
                 ", profile='" + profile + '\'' +
                 ", birthdate=" + birthdate +
-                ", admin=" + admin +
+                ", admin=" + isAdmin() +
                 '}';
     }
 
@@ -133,7 +135,6 @@ public class Member extends Model{
         pseudo = resultSet.getString("pseudo");
         password = resultSet.getString("password");
         profile = resultSet.getString("profile");
-        admin = resultSet.getBoolean("admin");
         birthdate = resultSet.getObject("birthdate", LocalDate.class);
     }
     @Override
@@ -141,56 +142,69 @@ public class Member extends Model{
         reload("select * from members where pseudo=:pseudo", new Params("pseudo", pseudo));
     }
 
+    protected static Member newInstance(ResultSet rs) {
+        try {
+            return rs.getInt("admin") == 0 ? new RegularMember() : new Administrator();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static List<Member> getAll() {
-        return queryList(Member.class, "select * from members order by pseudo");
+        return queryList(Member::newInstance, "select * from members order by pseudo");
     }
 
 
     public static Member getByPseudo(String pseudo){
-        return queryOne(Member.class, "select * from members where pseudo=:pseudo", new Params("pseudo", pseudo));
+        return queryOne(Member::newInstance, "select * from members where pseudo=:pseudo",
+                new Params("pseudo", pseudo));
     }
 
-    public boolean save() {
+    public Member save() {
         int c;
         Member m = getByPseudo(pseudo);
         String sql;
-        if (m == null)
+        if (m == null) {
+            Assert.isTrue(Security.isAdmin(), "Only admin may create members");
             sql = "insert into members (pseudo, password, profile, admin, birthdate) " +
                     "values (:pseudo,:password,:profile,:admin,:birthdate)";
-        else if (password == null || password.isBlank())
-            sql = "update members set profile=:profile, admin=:admin, " +
-                    "birthdate=:birthdate where pseudo=:pseudo";
-        else
-            sql = "update members set password=:password, profile=:profile, admin=:admin, " +
-                    "birthdate=:birthdate where pseudo=:pseudo";
+        }
+        else {
+            Assert.isTrue(Security.isAdmin() || Security.isLoggedUser(this), "Update only allowed if admin or own data");
+            Assert.isTrue(!Security.isLoggedUser(this) || m.isAdmin() == isAdmin(), "Connected user may not change his own role");
+            if (password == null || password.isBlank())
+                sql = "update members set password=:password, profile=:profile, admin=:admin, " +
+                        "birthdate=:birthdate where pseudo=:pseudo";
+            else
+                sql = "update members set password=:password, profile=:profile, admin=:admin, " +
+                        "birthdate=:birthdate where pseudo=:pseudo";
+        }
         c = execute(sql, new Params()
                 .add("pseudo", pseudo)
                 .add("password", password)
                 .add("profile", profile)
-                .add("admin", admin)
+                .add("admin", isAdmin() ? 1 : 0)
                 .add("birthdate", birthdate));
-        return c == 1;
+        Assert.isTrue(c == 1, "Something went wrong");
+        return this;
     }
 
-    public boolean delete() {
+    public void delete() {
+        Assert.isTrue(Security.isAdmin(), "Only admin may delete members");
         execute("delete from follows where follower=:pseudo or followee=:pseudo", new Params("pseudo", pseudo));
         execute("delete from messages where author=:pseudo or recipient=:pseudo", new Params("pseudo", pseudo));
         int c = execute("delete from members where pseudo=:pseudo", new Params("pseudo", pseudo));
-        return c == 1;
+        Assert.isTrue(c == 1, "Something went wrong");
     }
 
     @Override
     public boolean equals(Object o) {
         // s'il s'agit du même objet en mémoire, retourne vrai
         if (this == o) return true;
-        // si l'objet à comparer est null ou n'est pas issu de la même classe que l'objet courant, retourne faux
-        if (o == null || getClass() != o.getClass()) return false;
-        // transtype l'objet reçu en Member
-        Member member = (Member) o;
-        // retourne vrai si les deux objets ont le même pseudo
-        // remarque : cela veut dire que les deux objets sont considérés comme identiques s'ils ont le même pseudo
-        //            ce qui a du sens car c'est la clé primaire de la table. Attention cependant car cela signifie
-        //            que si d'autres attributs sont différents, les objets seront malgré tout considérés égaux.
+        // avec l'héritage, on compare via instanceof : un RegularMember et un Administrator
+        // qui partagent le même pseudo représentent le même membre logique
+        if (!(o instanceof Member member))
+            return false;
         return pseudo.equals(member.pseudo);
     }
 
@@ -208,36 +222,35 @@ public class Member extends Model{
     }
 
     public List<Member> getFollowers() {
-        return queryList(Member.class,
+        return queryList(Member::newInstance,
                 "select m.* from follows join members m on follows.follower = m.pseudo where followee=:pseudo",
                 new Params("pseudo", pseudo));
     }
 
     public List<Member> getFollowees() {
-        return queryList(Member.class,
+        return queryList(Member::newInstance,
                 "select m.* from follows join members m on follows.followee = m.pseudo where follower=:pseudo",
                 new Params("pseudo", pseudo));
     }
 
-    public boolean follow(Member other) {
+    public void follow(Member other) {
         if (other.equals(this))
-            return false;
+            return;
         if (!getFollowees().contains(other)) {
             int c = execute("insert into follows values (:follower,:followee)",
                     new Params("follower", pseudo)
                             .add("followee", other.pseudo));
-            return c == 1;
+            Assert.isTrue(c == 1, "Something went wrong");
         }
-        return false;
     }
 
-    public boolean unfollow(Member other) {
+    public void unfollow(Member other) {
         if (other.equals(this))
-            return false;
+            return;
         int c = execute("delete from follows where follower=:follower and followee=:followee",
                 new Params("follower", pseudo)
                         .add("followee", other.pseudo));
-        return c == 1;
+        Assert.isTrue(c == 1, "Something went wrong");
     }
 
     public RelationshipType getRelationshipType(Member otherMember) {

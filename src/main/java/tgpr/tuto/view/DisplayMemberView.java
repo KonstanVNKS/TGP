@@ -1,9 +1,9 @@
 package tgpr.tuto.view;
 
 import com.googlecode.lanterna.SGR;
+import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.DialogWindow;
-import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import tgpr.framework.ui.component.ColumnSpec;
@@ -11,10 +11,11 @@ import tgpr.framework.ui.component.ObjectTable;
 import tgpr.framework.ui.layout.FormGrid;
 import tgpr.framework.ui.layout.HBox;
 import tgpr.framework.ui.layout.Insets;
+import tgpr.framework.ui.layout.Layout;
+import tgpr.framework.ui.layout.Pos;
 import tgpr.framework.ui.layout.VBox;
 import tgpr.tuto.controller.DisplayMemberController;
 import tgpr.tuto.model.Member;
-import tgpr.framework.ui.layout.Pos;
 import tgpr.tuto.model.Message;
 import tgpr.tuto.model.Security;
 

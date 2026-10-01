@@ -1,5 +1,6 @@
 package tgpr.tuto.model;
 
+import org.springframework.util.Assert;
 import tgpr.framework.mvc.Model;
 import tgpr.framework.mvc.Params;
 
@@ -147,12 +148,14 @@ public class Message extends Model {
                         .add("dateTime", dateTime));
         if (id > 0)
             setPostId(id);
+        Assert.isTrue(id > 0, "Something went wrong");
         return this;
     }
 
-    public boolean delete() {
+    public void delete() {
+        Assert.isTrue(canDelete(Security.getLoggedUser()), "You're not allowed to delete this message");
         int c = execute("delete from messages where post_id=:postId", new Params("postId", postId));
-        return c == 1;
+        Assert.isTrue(c == 1, "Something went wrong");
     }
 
     public boolean canDelete(Member current) {

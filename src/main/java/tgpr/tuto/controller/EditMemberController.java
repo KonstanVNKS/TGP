@@ -43,7 +43,7 @@ public class EditMemberController extends Controller<EditMemberView> {
         var errors = validate(pseudo, profile, password, confirmPassword, birthDate, role);
         if (errors.isEmpty()) {
             var hashedPassword = password.isBlank() ? password : hash(password);
-            member = new Member(pseudo, hashedPassword, profile, toDate(birthDate), role.contentEquals("Admin"));
+            member = Member.createMember(pseudo, hashedPassword, profile, toDate(birthDate), role.contentEquals("Admin"));
             member.save();
             view.close();
         } else
@@ -68,7 +68,7 @@ public class EditMemberController extends Controller<EditMemberView> {
             errors.add("must match password", Fields.PasswordConfirm);
 
         var hashedPassword = password.isBlank() ? password : hash(password);
-        var member = new Member(pseudo, hashedPassword, profile, toDate(birthDate), role.contentEquals("Admin"));
+        var member = Member.createMember(pseudo, hashedPassword, profile, toDate(birthDate), role.contentEquals("Admin"));
         errors.addAll(MemberValidator.validate(member));
 
         return errors;
