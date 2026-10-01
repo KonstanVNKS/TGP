@@ -1,7 +1,9 @@
 public class TutoApp {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        var members = Member.getAll();
+        for (var m : members)
+            System.out.println(m);
     }
 
 
