@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.Collectors;
+import tgpr.framework.util.SortOrder;
 
 import static tgpr.framework.util.Tools.hash;
 
@@ -303,5 +304,44 @@ public abstract class Member extends Model{
         return new Message(-1, pseudo, to.pseudo, body, isPrivate, LocalDateTime.now()).save();
     }
 
-
+    public static List<Member> getFiltered(String filterText, Boolean isAdmin, Fields sortField, SortOrder sortOrder, RelationshipType relationshipType) {
+        String filter = '%' + filterText + '%';
+        Params params = new Params("filter", filter);
+        String sql = "select * from members where (pseudo like :filter or profile like :filter or birthdate like :filter)";
+        if (isAdmin != null) {
+            if (isAdmin)
+                sql += " and admin=1";
+            else
+                sql += " and admin=0";
+        }
+        if (relationshipType != null) {
+            switch (relationshipType) {
+                case Unrelated:
+                    sql += " and pseudo<>:user";
+                    sql += " and not exists(select * from follows where followee=:user and follower=pseudo)";
+                    sql += " and not exists(select * from follows where follower=:user and followee=pseudo)";
+                    break;
+                case Mutual:
+                    sql += " and exists(select * from follows where followee=:user and follower=pseudo)";
+                    sql += " and exists(select * from follows where follower=:user and followee=pseudo)";
+                    break;
+                case Follower:
+                    sql += " and exists(select * from follows where followee=:user and follower=pseudo)";
+                    sql += " and not exists(select * from follows where follower=:user and followee=pseudo)";
+                    break;
+                case Followee:
+                    sql += " and not exists(select * from follows where followee=:user and follower=pseudo)";
+                    sql += " and exists(select * from follows where follower=:user and followee=pseudo)";
+                    break;
+                case Yourself:
+                    sql += " and pseudo=:user";
+                    break;
+            }
+            params.add("user", Security.getLoggedUser().getPseudo());
+        }
+        if (sortField == Fields.Admin)
+            sortOrder = sortOrder.reversed();
+        sql += " order by " + sortField.name() + " " + (sortOrder == SortOrder.Ascending ? "asc" : "desc");
+        return queryList(Member::newInstance, sql, params);
+    }
 }

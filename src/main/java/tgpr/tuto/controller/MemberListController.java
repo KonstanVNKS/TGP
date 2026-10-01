@@ -4,6 +4,7 @@ import tgpr.framework.mvc.Controller;
 import tgpr.tuto.model.Member;
 import tgpr.tuto.model.Security;
 import tgpr.tuto.view.MemberListView;
+import tgpr.framework.util.SortOrder;
 
 import java.util.List;
 
@@ -15,8 +16,9 @@ public class MemberListController extends Controller<MemberListView> {
         return new MemberListView(this);
     }
 
-    public List<Member> getMembers() {
-        return Member.getAll();
+    public List<Member> getMembers(String filter, boolean filterOnAdmin, boolean filterOnMember,
+                                   Member.Fields sortField, SortOrder sortOrder, Member.RelationshipType relationshipType) {
+        return Member.getFiltered(filter, filterOnAdmin && filterOnMember ? null : filterOnAdmin, sortField, sortOrder, relationshipType);
     }
 
     public Member addMember() {

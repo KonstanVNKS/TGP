@@ -5,25 +5,25 @@ import tgpr.framework.mvc.Params;
 import java.time.LocalDate;
 import java.util.List;
 
-public class Administrator extends Member {
-    public Administrator() {
+public class RegularMember extends Member {
+    public RegularMember() {
         super();
     }
 
-    public Administrator(String pseudo, String password) {
+    public RegularMember(String pseudo, String password) {
         super(pseudo, password);
     }
 
-    public Administrator(String pseudo, String password, String profile, LocalDate birthdate) {
+    public RegularMember(String pseudo, String password, String profile, LocalDate birthdate) {
         super(pseudo, password, profile, birthdate);
     }
 
-    public static List<Administrator> getAllAdministrators() {
-        return queryList(Administrator.class, "select * from members where admin=1 order by pseudo");
+    public static List<RegularMember> getAllRegularMembers() {
+        return queryList(RegularMember.class, "select * from members where admin=0 order by pseudo");
     }
 
-    public static Administrator getAdministratorByPseudo(String pseudo) {
-        return queryOne(Administrator.class, "select * from members where pseudo=:pseudo and admin=1",
+    public static RegularMember getRegularMemberByPseudo(String pseudo) {
+        return queryOne(RegularMember.class, "select * from members where pseudo=:pseudo and admin=0",
                 new Params("pseudo", pseudo));
     }
 }
