@@ -2,6 +2,7 @@ package tgpr.tuto.view;
 
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.input.KeyStroke;
+import tgpr.framework.ui.layout.*;
 import tgpr.framework.util.SortOrder;
 import com.googlecode.lanterna.gui2.menu.Menu;
 import com.googlecode.lanterna.gui2.menu.MenuBar;
@@ -10,11 +11,6 @@ import tgpr.framework.mvc.ViewManager;
 import tgpr.framework.ui.Ui;
 import tgpr.framework.ui.component.ColumnSpec;
 import tgpr.framework.ui.component.ObjectTable;
-import tgpr.framework.ui.layout.BorderPane;
-import tgpr.framework.ui.layout.Insets;
-import tgpr.framework.ui.layout.Pos;
-import tgpr.framework.ui.layout.Spacing;
-import tgpr.framework.ui.layout.VBox;
 import tgpr.tuto.controller.MemberListController;
 import tgpr.tuto.model.Member;
 import tgpr.tuto.model.Security;
@@ -52,15 +48,6 @@ public class MemberListView extends BasicWindow {
         txtFilter.takeFocus();
     }
 
-    private MenuBar createMenu() {
-        MenuBar menuBar = new MenuBar();
-        menuBar.add(menuFile);
-        Ui.addShortcut(this, menuFile, KeyStroke.fromString("<A-f>"));
-        menuFile.add(new MenuItem("Logout", controller::logout));
-        menuFile.add(new MenuItem("Exit", controller::exit));
-        return menuBar;
-    }
-
     private Panel createBody() {
         var body = VBox.create()
                 .padding(Insets.getDefault());
@@ -78,16 +65,6 @@ public class MemberListView extends BasicWindow {
         menuFile.add(new MenuItem("Logout", controller::logout));
         menuFile.add(new MenuItem("Exit", controller::exit));
         return menuBar;
-    }
-
-    private Panel createBody() {
-        var body = VBox.create()
-                .padding(Insets.getDefault());
-        body.add(createContent());
-        if (Security.isAdmin()) {
-            body.add(createAddButton());
-        }
-        return body;
     }
 
     private Panel createContent() {

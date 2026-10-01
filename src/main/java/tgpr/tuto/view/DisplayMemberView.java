@@ -70,6 +70,7 @@ public class DisplayMemberView extends DialogWindow {
         setComponent(VBox.create().spacing(1)
                 .add(fields)
                 .add(lblRelationship.setForegroundColor(TextColor.ANSI.GREEN_BRIGHT), Pos.CENTER)
+                .add(createMessagePanel())
                 .add(buttons.alignInParent(Pos.CENTER)));
 
         refresh();
