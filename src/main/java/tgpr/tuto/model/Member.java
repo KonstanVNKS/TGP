@@ -10,6 +10,8 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import static tgpr.framework.util.Tools.hash;
+
 
 public class Member extends Model{
     public enum Fields {
@@ -166,6 +168,11 @@ public class Member extends Model{
         return Objects.hash(pseudo);
     }
 
-
+    public static Member checkCredentials(String pseudo, String password) {
+        var member = Member.getByPseudo(pseudo);
+        if (member != null && member.password.equals(hash(password)))
+            return member;
+        return null;
+    }
 
 }

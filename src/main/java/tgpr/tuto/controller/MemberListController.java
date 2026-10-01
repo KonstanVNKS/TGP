@@ -2,6 +2,7 @@ package tgpr.tuto.controller;
 
 import tgpr.framework.mvc.Controller;
 import tgpr.tuto.model.Member;
+import tgpr.tuto.model.Security;
 import tgpr.tuto.view.MemberListView;
 
 import java.util.List;
@@ -24,6 +25,15 @@ public class MemberListController extends Controller<MemberListView> {
         return controller.getMember();
     }
     public void editMember(Member member) {
-        navigateTo(new EditMemberController(member));
+        navigateTo(new DisplayMemberController(member));
+    }
+
+    public void logout() {
+        Security.logout();
+        navigateTo(new LoginController());
+    }
+
+    public void exit() {
+        System.exit(0);
     }
 }

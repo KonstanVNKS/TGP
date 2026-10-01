@@ -1,36 +1,16 @@
 package tgpr.tuto;
 
-import tgpr.tuto.model.Member;
 import tgpr.framework.mvc.Controller;
-import tgpr.tuto.controller.MemberListController;
+import tgpr.framework.mvc.Model;
+import tgpr.tuto.controller.LoginController;
 
 public class TutoApp {
-    private static void testModel(){
-        System.out.println("\nListe des membres :");
-        var members = Member.getAll();
-        for (var m : members)
-            System.out.println(m);
-
-        System.out.println("\nMembre 'ben' :");
-        var ben = Member.getByPseudo("ben");
-        System.out.println(ben);
-
-        System.out.println("\nNouveau membre 'test'");
-        var test = new Member("test", "test", false);
-        // sauvegarde
-        boolean res = test.save();
-        assert res;
-        // relecture en BD
-        test = Member.getByPseudo("test");
-        assert test != null;
-        System.out.println(test);
-        // suppression
-        res = test.delete();
-        assert res;
-        assert Member.getByPseudo("test") == null;
-    }
+    public final static String DATABASE_SCRIPT_FILE = "/database/tgpr-msn.sql";
 
     public static void main(String[] args) {
-        Controller.navigateTo(new MemberListController());
+        if (!Model.checkDb(DATABASE_SCRIPT_FILE))
+            Controller.abort("Database is not available!");
+        else
+            Controller.navigateTo(new LoginController());
     }
 }

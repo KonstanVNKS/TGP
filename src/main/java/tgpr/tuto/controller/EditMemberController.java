@@ -5,7 +5,11 @@ import tgpr.framework.validation.ErrorList;
 import tgpr.tuto.model.Member;
 import tgpr.tuto.model.MemberValidator;
 import tgpr.tuto.view.EditMemberView;
+import tgpr.tuto.model.Security;
+
+
 import static tgpr.framework.util.Tools.*;
+
 
 public class EditMemberController extends Controller<EditMemberView> {
     public enum Fields {
@@ -53,6 +57,10 @@ public class EditMemberController extends Controller<EditMemberView> {
             errors.add(MemberValidator.isValidAvailablePseudo(pseudo));
             errors.add(MemberValidator.isValidPassword(password));
         }
+        // Seul un admin peut changer le rôle d'un membre, à l'exception de son propre rôle
+        var isAdmin = role.contentEquals("Admin");
+        if (pseudo.equals(Security.getLoggedUser().getPseudo()) && Security.isAdmin() != isAdmin)
+            errors.add("you may not change your role", Member.Fields.Admin);
 
         if (!birthDate.isBlank() && !isValidDate(birthDate))
             errors.add("invalid birth date", Member.Fields.BirthDate);
