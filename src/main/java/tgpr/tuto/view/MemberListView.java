@@ -38,6 +38,13 @@ public class MemberListView extends BasicWindow {
         );
         Ui.sizeTo(table, ViewManager.getTerminalColumns(), 15);
 
+        table.setSelectAction(() -> {
+            var member = table.getSelected();
+            controller.editMember(member);
+            reloadData();
+            table.setSelected(member);
+        });
+
         root.add(new EmptySpace(), table);
 
         root.add(new EmptySpace());

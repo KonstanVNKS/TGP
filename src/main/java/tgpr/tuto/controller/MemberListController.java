@@ -23,4 +23,7 @@ public class MemberListController extends Controller<MemberListView> {
         navigateTo(controller);
         return controller.getMember();
     }
+    public void editMember(Member member) {
+        navigateTo(new EditMemberController(member));
+    }
 }

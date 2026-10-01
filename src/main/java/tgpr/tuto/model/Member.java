@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.Objects;
 
 
 public class Member extends Model{
@@ -124,6 +125,9 @@ public class Member extends Model{
         if (m == null)
             sql = "insert into members (pseudo, password, profile, admin, birthdate) " +
                     "values (:pseudo,:password,:profile,:admin,:birthdate)";
+        else if (password == null || password.isBlank())
+            sql = "update members set profile=:profile, admin=:admin, " +
+                    "birthdate=:birthdate where pseudo=:pseudo";
         else
             sql = "update members set password=:password, profile=:profile, admin=:admin, " +
                     "birthdate=:birthdate where pseudo=:pseudo";
@@ -141,6 +145,26 @@ public class Member extends Model{
         return c == 1;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        // s'il s'agit du même objet en mémoire, retourne vrai
+        if (this == o) return true;
+        // si l'objet à comparer est null ou n'est pas issu de la même classe que l'objet courant, retourne faux
+        if (o == null || getClass() != o.getClass()) return false;
+        // transtype l'objet reçu en Member
+        Member member = (Member) o;
+        // retourne vrai si les deux objets ont le même pseudo
+        // remarque : cela veut dire que les deux objets sont considérés comme identiques s'ils ont le même pseudo
+        //            ce qui a du sens car c'est la clé primaire de la table. Attention cependant car cela signifie
+        //            que si d'autres attributs sont différents, les objets seront malgré tout considérés égaux.
+        return pseudo.equals(member.pseudo);
+    }
+
+    @Override
+    public int hashCode() {
+        // on retourne le hash code du pseudo qui est "unique" puisqu'il correspond à la clé primaire
+        return Objects.hash(pseudo);
+    }
 
 
 

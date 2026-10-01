@@ -1,7 +1,6 @@
 package tgpr.tuto.view;
 
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.DialogWindow;
 import tgpr.framework.ui.Ui;
@@ -18,8 +17,6 @@ import java.util.regex.Pattern;
 import static tgpr.framework.util.Tools.asString;
 import static tgpr.framework.util.Tools.ifNull;
 
-import java.util.List;
-
 public class EditMemberView extends DialogWindow {
 
     private final EditMemberController controller;
@@ -30,70 +27,57 @@ public class EditMemberView extends DialogWindow {
     private final TextBox txtPasswordConfirm;
     private final TextBox txtBirthDate;
     private final ComboBox<String> cboRole;
-    private final Label errPseudo;
-    private final Label errProfile;
-    private final Label errPassword;
-    private final Label errPasswordConfirm;
-    private final Label errBirthDate;
-    private final Label errRole;
     private final Button btnAddUpdate;
+    private FormGrid fieldsGrid;
 
     private final Member member;
 
     public EditMemberView(EditMemberController controller, Member member) {
-        // définit le titre de la fenêtre
         super((member == null ? "Add " : "Update ") + "Member");
 
         this.member = member;
         this.controller = controller;
 
         setHints(List.of(Hint.CENTERED, Hint.FIXED_SIZE));
-        // permet de fermer la fenêtre en pressant la touche Esc
         setCloseWindowWithEscape(true);
-        // définit une taille fixe pour la fenêtre de 15 lignes et 70 colonnes
         setFixedSize(new TerminalSize(70, 15));
-        var form = FormGrid.create();
+
+        fieldsGrid = FormGrid.create();
 
         txtPseudo = Ui.sizeTo(new TextBox(), 11);
         txtPseudo.setValidationPattern(Pattern.compile("[a-z][a-zA-Z0-9]{0,7}"))
                 .setTextChangeListener((txt, byUser) -> validate())
                 .setReadOnly(member != null);
-        errPseudo = new Label("").setForegroundColor(TextColor.ANSI.RED);
-        form.row("Pseudo:", txtPseudo, errPseudo);
+        fieldsGrid.row("Pseudo:", txtPseudo, Member.Fields.Pseudo);
 
         txtProfile = Ui.sizeTo(new TextBox(), 21);
         txtProfile.setTextChangeListener((txt, byUser) -> validate());
-        errProfile = new Label("").setForegroundColor(TextColor.ANSI.RED);
-        form.row("Profile:", txtProfile, errProfile);
+        fieldsGrid.row("Profile:", txtProfile, Member.Fields.Profile);
 
         txtPassword = Ui.sizeTo(new TextBox(), 11);
         txtPassword.setMask('*')
                 .setTextChangeListener((txt, byUser) -> validate());
-        errPassword = new Label("").setForegroundColor(TextColor.ANSI.RED);
-        form.row("Password:", txtPassword, errPassword);
+        fieldsGrid.row("Password:", txtPassword, Member.Fields.Password);
 
         txtPasswordConfirm = Ui.sizeTo(new TextBox(), 11);
         txtPasswordConfirm.setMask('*')
                 .setTextChangeListener((txt, byUser) -> validate());
-        errPasswordConfirm = new Label("").setForegroundColor(TextColor.ANSI.RED);
-        form.row("Confirm Password:", txtPasswordConfirm, errPasswordConfirm);
+        fieldsGrid.row("Confirm Password:", txtPasswordConfirm, EditMemberController.Fields.PasswordConfirm);
 
         txtBirthDate = Ui.sizeTo(new TextBox(), 11);
         txtBirthDate.setValidationPattern(Pattern.compile("[/\\d]{0,10}"))
                 .setTextChangeListener((txt, byUser) -> validate());
-        errBirthDate = new Label("").setForegroundColor(TextColor.ANSI.RED);
-        form.row("Birth Date:", txtBirthDate, errBirthDate);
+        fieldsGrid.row("Birth Date:", txtBirthDate, Member.Fields.BirthDate);
 
         cboRole = Ui.sizeTo(new ComboBox<>("Admin", "Member"), 11);
         cboRole.setSelectedItem("Member");
         cboRole.addListener((selectedIndex, previousSelection, changedByUserInteraction) -> validate());
-        errRole = new Label("").setForegroundColor(TextColor.ANSI.RED);
-        form.row("Role:", cboRole, errRole);
+        fieldsGrid.row("Role:", cboRole, Member.Fields.Admin);
 
         btnAddUpdate = new Button(member == null ? "Add" : "Update", this::add).setEnabled(false);
         var buttons = HBox.create().add(btnAddUpdate, new Button("Cancel", this::close));
 
-        setComponent(VBox.create().spacing(1).padding(Insets.of(1, 1, 0, 0)).add(form, buttons));
+        setComponent(VBox.create().spacing(1).padding(Insets.of(1, 1, 0, 0)).add(fieldsGrid, buttons));
 
         if (member != null) {
             txtPseudo.setText(member.getPseudo());
@@ -124,14 +108,8 @@ public class EditMemberView extends DialogWindow {
                 cboRole.getText()
         );
 
-        errPseudo.setText(errors.getFirstErrorMessage(Member.Fields.Pseudo));
-        errProfile.setText(errors.getFirstErrorMessage(Member.Fields.Profile));
-        errPassword.setText(errors.getFirstErrorMessage(Member.Fields.Password));
-        errPasswordConfirm.setText(errors.getFirstErrorMessage(EditMemberController.Fields.PasswordConfirm));
-        errBirthDate.setText(errors.getFirstErrorMessage(Member.Fields.BirthDate));
-        errRole.setText(errors.getFirstErrorMessage(Member.Fields.Admin));
+        fieldsGrid.applyErrors(errors);
 
         btnAddUpdate.setEnabled(errors.isEmpty());
     }
-
 }
