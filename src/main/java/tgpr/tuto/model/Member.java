@@ -9,6 +9,9 @@ import java.util.List;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 import static tgpr.framework.util.Tools.hash;
 
@@ -16,6 +19,32 @@ import static tgpr.framework.util.Tools.hash;
 public class Member extends Model{
     public enum Fields {
         Pseudo, Password, Profile, Admin, BirthDate
+    }
+
+    public enum RelationshipType {
+        Unrelated("This member is not related to you."),
+        Followee("You are following this member."),
+        Follower("This member is following you."),
+        Mutual("This member and you are mutual friends."),
+        Yourself("This is you!");
+
+        private final String text;
+
+        RelationshipType(final String text) {
+            this.text = text;
+        }
+
+        public String toText() {
+            return text;
+        }
+
+        // retourne les valeurs de l'enum triées par ordre alphabétique
+        public static List<String> getSortedStrings() {
+            return Arrays.stream(Member.RelationshipType.values())
+                    .sorted(Comparator.comparing(Enum::toString))
+                    .map(Enum::toString)
+                    .collect(Collectors.toList());
+        }
     }
 
     private String pseudo;
@@ -143,6 +172,7 @@ public class Member extends Model{
     }
 
     public boolean delete() {
+        execute("delete from follows where follower=:pseudo or followee=:pseudo", new Params("pseudo", pseudo));
         int c = execute("delete from members where pseudo=:pseudo", new Params("pseudo", pseudo));
         return c == 1;
     }
@@ -173,6 +203,64 @@ public class Member extends Model{
         if (member != null && member.password.equals(hash(password)))
             return member;
         return null;
+    }
+
+    public List<Member> getFollowers() {
+        return queryList(Member.class,
+                "select m.* from follows join members m on follows.follower = m.pseudo where followee=:pseudo",
+                new Params("pseudo", pseudo));
+    }
+
+    public List<Member> getFollowees() {
+        return queryList(Member.class,
+                "select m.* from follows join members m on follows.followee = m.pseudo where follower=:pseudo",
+                new Params("pseudo", pseudo));
+    }
+
+    public boolean follow(Member other) {
+        if (other.equals(this))
+            return false;
+        if (!getFollowees().contains(other)) {
+            int c = execute("insert into follows values (:follower,:followee)",
+                    new Params("follower", pseudo)
+                            .add("followee", other.pseudo));
+            return c == 1;
+        }
+        return false;
+    }
+
+    public boolean unfollow(Member other) {
+        if (other.equals(this))
+            return false;
+        int c = execute("delete from follows where follower=:follower and followee=:followee",
+                new Params("follower", pseudo)
+                        .add("followee", other.pseudo));
+        return c == 1;
+    }
+
+    public RelationshipType getRelationshipType(Member otherMember) {
+        if (otherMember == null)
+            return RelationshipType.Unrelated;
+        else if (otherMember.equals(this))
+            return RelationshipType.Yourself;
+        var followee = getFollowees().contains(otherMember);
+        var follower = getFollowers().contains(otherMember);
+        if (followee && follower)
+            return RelationshipType.Mutual;
+        else if (followee)
+            return RelationshipType.Followee;
+        else if (follower)
+            return RelationshipType.Follower;
+        else
+            return RelationshipType.Unrelated;
+    }
+
+    public void toggleFollowUnfollow(Member otherMember) {
+        if (otherMember == null) return;
+        switch (getRelationshipType(otherMember)) {
+            case Mutual, Followee -> unfollow(otherMember);
+            default -> follow(otherMember);
+        }
     }
 
 }

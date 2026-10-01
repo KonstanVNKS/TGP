@@ -43,16 +43,16 @@ CREATE TABLE `follows` (
 -- Déchargement des données de la table `follows`
 --
 
--- INSERT INTO `follows` (`follower`, `followee`) VALUES
--- ('admin', 'ben'),
--- ('admin', 'guest'),
--- ('ben', 'admin'),
--- ('ben', 'caro'),
--- ('ben', 'fred'),
--- ('ben', 'guest'),
--- ('bob', 'ben'),
--- ('caro', 'ben'),
--- ('caro', 'fred');
+INSERT INTO `follows` (`follower`, `followee`) VALUES
+('admin', 'ben'),
+('admin', 'guest'),
+('ben', 'admin'),
+('ben', 'caro'),
+('ben', 'fred'),
+('ben', 'guest'),
+('bob', 'ben'),
+('caro', 'ben'),
+('caro', 'fred');
 
 -- --------------------------------------------------------
 
@@ -102,20 +102,20 @@ CREATE TABLE `messages` (
 -- Déchargement des données de la table `messages`
 --
 
--- INSERT INTO `messages` (`post_id`, `author`, `recipient`, `body`, `private`, `date_time`) VALUES
--- (2, 'ben', 'ben', 'message 1', 0, '2021-07-09 10:11:33'),
--- (3, 'ben', 'ben', 'message 2', 0, '2021-07-09 10:12:59'),
--- (5, 'caro', 'ben', 'message de caro', 0, '2021-07-09 10:14:03'),
--- (8, 'ben', 'ben', 'test', 1, '2021-07-09 10:58:10'),
--- (9, 'ben', 'ben', 'test', 0, '2021-07-09 10:58:15'),
--- (19, 'caro', 'caro', 'myself', 0, '2021-07-09 11:29:20'),
--- (47, 'ben', 'caro', 'a longer message for caro in order to see how it is wrapped around in the message table.', 0, '2021-07-09 11:34:44'),
--- (48, 'ben', 'fred', 'this is a message to fred', 0, '2021-07-09 18:15:27'),
--- (49, 'ben', 'fred', 'this is a private message to fred', 1, '2021-07-09 18:15:36'),
--- (58, 'ben', 'fred', 'hello', 0, '2021-07-19 00:16:01'),
--- (59, 'ben', 'fred', 'aaa', 0, '2021-07-19 00:17:41'),
--- (61, 'admin', 'admin', 'test', 0, '2021-10-30 11:32:37'),
--- (86, 'ben', 'caro', 'ben to caro', 0, '2021-12-16 12:50:29');
+INSERT INTO `messages` (`post_id`, `author`, `recipient`, `body`, `private`, `date_time`) VALUES
+(2, 'ben', 'ben', 'message 1', 0, '2021-07-09 10:11:33'),
+(3, 'ben', 'ben', 'message 2', 0, '2021-07-09 10:12:59'),
+(5, 'caro', 'ben', 'message de caro', 0, '2021-07-09 10:14:03'),
+(8, 'ben', 'ben', 'test', 1, '2021-07-09 10:58:10'),
+(9, 'ben', 'ben', 'test', 0, '2021-07-09 10:58:15'),
+(19, 'caro', 'caro', 'myself', 0, '2021-07-09 11:29:20'),
+(47, 'ben', 'caro', 'a longer message for caro in order to see how it is wrapped around in the message table.', 0, '2021-07-09 11:34:44'),
+(48, 'ben', 'fred', 'this is a message to fred', 0, '2021-07-09 18:15:27'),
+(49, 'ben', 'fred', 'this is a private message to fred', 1, '2021-07-09 18:15:36'),
+(58, 'ben', 'fred', 'hello', 0, '2021-07-19 00:16:01'),
+(59, 'ben', 'fred', 'aaa', 0, '2021-07-19 00:17:41'),
+(61, 'admin', 'admin', 'test', 0, '2021-10-30 11:32:37'),
+(86, 'ben', 'caro', 'ben to caro', 0, '2021-12-16 12:50:29');
 
 --
 -- Index pour les tables déchargées

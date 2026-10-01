@@ -3,6 +3,7 @@ package tgpr.tuto.view;
 import com.googlecode.lanterna.SGR;
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.DialogWindow;
+import com.googlecode.lanterna.TextColor;
 import tgpr.framework.ui.layout.FormGrid;
 import tgpr.framework.ui.layout.HBox;
 import tgpr.framework.ui.layout.Insets;
@@ -21,6 +22,8 @@ public class DisplayMemberView extends DialogWindow {
 
     private final DisplayMemberController controller;
     private Member member;
+    private final Label lblRelationship = new Label("");
+    private Button btnToggleFollow = null;
 
     private final Label lblPseudo = new Label("").addStyle(SGR.BOLD);
     private final Label lblProfile = new Label("").addStyle(SGR.BOLD);
@@ -44,6 +47,8 @@ public class DisplayMemberView extends DialogWindow {
                 .row("Role:", lblRole);
 
         var buttons = HBox.create();
+        if (!Security.isLoggedUser(member))
+            buttons.add(btnToggleFollow = new Button("", this::toggleFollow));
         // Le membre connecté ne peut modifier que ses données ou celles des autres s'il est admin
         if (Security.isAdmin() || Security.isLoggedUser(member))
             buttons.add(new Button("Update", this::update));
@@ -54,6 +59,7 @@ public class DisplayMemberView extends DialogWindow {
 
         setComponent(VBox.create().spacing(1)
                 .add(fields)
+                .add(lblRelationship.setForegroundColor(TextColor.ANSI.GREEN_BRIGHT), Pos.CENTER)
                 .add(buttons.alignInParent(Pos.CENTER)));
 
         refresh();
@@ -61,10 +67,12 @@ public class DisplayMemberView extends DialogWindow {
 
     private void refresh() {
         if (member != null) {
-            lblPseudo.setText(member.getPseudo());
-            lblProfile.setText(ifNull(member.getProfile(), ""));
-            lblBirthDate.setText(asString(member.getBirthdate()));
+            ...
             lblRole.setText(member.isAdmin() ? "Admin" : "Member");
+            var rel = Security.getLoggedUser().getRelationshipType(member);
+            lblRelationship.setText(rel.toText());
+            if (btnToggleFollow != null)
+                btnToggleFollow.setLabel(rel == Member.RelationshipType.Unrelated || rel == Member.RelationshipType.Follower ? "Follow" : "Unfollow");
         }
     }
 
@@ -76,4 +84,10 @@ public class DisplayMemberView extends DialogWindow {
     private void delete() {
         controller.delete();
     }
+
+    private void toggleFollow() {
+        controller.toggleFollow();
+        refresh();
+    }
+
 }

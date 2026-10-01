@@ -48,7 +48,8 @@ public class MemberListView extends BasicWindow {
                 new ColumnSpec<>("Pseudo", Member::getPseudo),
                 new ColumnSpec<>("Profile", m -> ifNull(m.getProfile(), "")),
                 new ColumnSpec<>("Birth Date", m -> asString(m.getBirthdate())),
-                new ColumnSpec<>("Role", m -> m.isAdmin() ? "Admin" : "Member")
+                new ColumnSpec<>("Role", m -> m.isAdmin() ? "Admin" : "Member"),
+                new ColumnSpec<>("Relationship", m -> Security.getLoggedUser().getRelationshipType(m))
         );
         Ui.sizeTo(table, ViewManager.getTerminalColumns(), 15);
         table.setSelectAction(() -> {

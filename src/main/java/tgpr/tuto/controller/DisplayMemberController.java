@@ -33,4 +33,7 @@ public class DisplayMemberController extends Controller<DisplayMemberView> {
     public DisplayMemberView getView() {
         return view;
     }
+    public void toggleFollow() {
+        Security.getLoggedUser().toggleFollowUnfollow(member);
+    }
 }
