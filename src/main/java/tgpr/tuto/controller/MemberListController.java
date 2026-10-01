@@ -8,6 +8,7 @@ import java.util.List;
 
 public class MemberListController extends Controller<MemberListView> {
 
+
     @Override
     public MemberListView getView() {
         return new MemberListView(this);
@@ -15,5 +16,11 @@ public class MemberListController extends Controller<MemberListView> {
 
     public List<Member> getMembers() {
         return Member.getAll();
+    }
+
+    public Member addMember() {
+        var controller = new EditMemberController();
+        navigateTo(controller);
+        return controller.getMember();
     }
 }

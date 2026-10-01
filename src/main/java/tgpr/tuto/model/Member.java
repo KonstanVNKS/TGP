@@ -11,6 +11,10 @@ import java.time.LocalDate;
 
 
 public class Member extends Model{
+    public enum Fields {
+        Pseudo, Password, Profile, Admin, BirthDate
+    }
+
     private String pseudo;
     private String password;
     private String profile;
